@@ -1,15 +1,18 @@
 package com.example.approvalchime
 
 import android.app.NotificationChannel
+import android.Manifest
 import android.app.NotificationManager
 import android.content.ContentValues
 import android.content.Context
+import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -66,6 +69,10 @@ fun createChannelWithSound(context: Context, channelId: String, name: String, so
 }
 
 fun postTestNotification(context: Context, channelId: String) {
+    if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+        // MainActivityでリクエストはしているが、ユーザーが拒否した場合などは何もしない
+        return
+    }
     val n = NotificationCompat.Builder(context, channelId)
         .setSmallIcon(android.R.drawable.ic_dialog_info)
         .setContentTitle("新しい承認音を適用しました")
