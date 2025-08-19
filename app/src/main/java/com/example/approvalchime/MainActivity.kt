@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -33,10 +34,25 @@ fun MainScreen(appContext: android.content.Context) {
     val permLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { /* no-op */ }
+    var selectedDb by remember { mutableStateOf(-1.0) }
+    val volumeOptions = mapOf("標準" to -1.0, "控えめ" to -3.0, "さらに控えめ" to -6.0)
 
     Column(Modifier.padding(24.dp)) {
         Text("承認音ジェネレーター", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(16.dp))
+
+        Text("音量プリセット", style = MaterialTheme.typography.bodyLarge)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            volumeOptions.forEach { (label, db) ->
+                RadioButton(
+                    selected = selectedDb == db,
+                    onClick = { selectedDb = db }
+                )
+                Text(label, Modifier.padding(start = 2.dp, end = 8.dp))
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+
         Button(
             enabled = !busy,
             onClick = {
@@ -46,7 +62,7 @@ fun MainScreen(appContext: android.content.Context) {
                 scope.launch(Dispatchers.IO) {
                     busy = true
                     try {
-                        val pcm = synthEMoneyLike()
+                        val pcm = synthEMoneyLike(targetDb = selectedDb)
                         val name = "Approval_" + System.currentTimeMillis()
                         val uri = savePcmAsWavToMediaStore(appContext, name, pcm)
                         val channelId = "approval_ch"

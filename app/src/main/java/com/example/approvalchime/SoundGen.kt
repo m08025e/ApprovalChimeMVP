@@ -51,7 +51,7 @@ fun autoSpec2(now: LocalDateTime, rng: Random = Random(System.nanoTime())): Tone
 }
 
 // 2オペFM＋ワンポールLPF、2〜3音を50ms間隔で順次重ねる
-fun synthEMoneyLike(sampleRate: Int = 44100): ShortArray {
+fun synthEMoneyLike(sampleRate: Int = 44100, targetDb: Double = -1.0): ShortArray {
     val rng = Random(System.nanoTime())
     val spec = autoSpec2(LocalDateTime.now(), rng)
     val notes = pickConstrainedNotes(rng)
@@ -92,9 +92,9 @@ fun synthEMoneyLike(sampleRate: Int = 44100): ShortArray {
         out[i] = lp
     }
 
-    // 正規化（-1 dBFS）
+    // 正規化
     val peak = out.maxOf { abs(it) }.coerceAtLeast(1e-9)
-    val gain = 10.0.pow(-1.0 / 20.0) / peak
+    val gain = 10.0.pow(targetDb / 20.0) / peak
     val pcm = ShortArray(n)
     for (i in 0 until n) {
         val v = (out[i] * gain).coerceIn(-1.0, 1.0)
