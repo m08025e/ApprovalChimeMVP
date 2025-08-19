@@ -56,11 +56,11 @@ fun MainScreen(appContext: android.content.Context) {
         Button(
             enabled = !busy,
             onClick = {
+                busy = true // Immediately disable the button
                 if (Build.VERSION.SDK_INT >= 33) {
                     permLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
                 scope.launch(Dispatchers.IO) {
-                    busy = true
                     try {
                         val pcm = synthEMoneyLike(targetDb = selectedDb)
                         val name = "Approval_" + System.currentTimeMillis()
@@ -68,7 +68,9 @@ fun MainScreen(appContext: android.content.Context) {
                         val channelId = "approval_ch"
                         createChannelWithSound(appContext, channelId, "Approval Sound", uri)
                         launch(Dispatchers.Main) { postTestNotification(appContext, channelId) }
-                    } finally { busy = false }
+                    } finally {
+                        busy = false // Re-enable on completion or failure
+                    }
                 }
             }
         ) {

@@ -6,15 +6,12 @@ import kotlin.random.Random
 
 data class Note(val freq: Double, val startMs: Int)
 
-private val MAJOR_SCALE = doubleArrayOf(261.63, 293.66, 329.63, 392.00, 440.00) // C D E G A
+private val C_MAJOR_ARPEGGIO = doubleArrayOf(261.63, 329.63, 392.00, 523.25) // C4, E4, G4, C5
 
 private fun pickConstrainedNotes(rng: Random): List<Note> {
     val num = if (rng.nextDouble() < 0.6) 2 else 3
-    val base = listOf(261.63, 329.63, 392.00).random(rng) // C/E/G を優先
-    val pool = MAJOR_SCALE.toMutableList().apply {
-        add(base * 5.0/4.0) // 長三度
-        add(base * 3.0/2.0) // 完全五度
-    }.map { it.coerceIn(200.0, 2000.0) }
+    // Cメジャーアルペジオから常に選択し、明るく一貫したサウンドにする
+    val pool = C_MAJOR_ARPEGGIO.toList()
 
     val chosen = pool.shuffled(rng).take(num)
     val pattern = rng.nextInt(3)
@@ -23,7 +20,8 @@ private fun pickConstrainedNotes(rng: Random): List<Note> {
         1 -> chosen.sortedDescending() // 下降
         else -> chosen                 // アルペジオ風
     }
-    return sorted.mapIndexed { i, f -> Note(freq = f, startMs = i * 50) } // 50ms刻み
+    // 開始時間をずらして心地よいアルペジオ効果を生み出す
+    return sorted.mapIndexed { i, f -> Note(freq = f, startMs = i * 50) }
 }
 
 data class ToneSpec2(
@@ -36,7 +34,7 @@ data class ToneSpec2(
     val lowpassHz: Double
 )
 
-fun autoSpec2(now: LocalDateTime, rng: Random = Random(System.nanoTime())): ToneSpec2 {
+fun autoSpec2(now: LocalDateTime, rng: Random = Random.Default): ToneSpec2 {
     val duration = (400..1000).random(rng) // 0.4〜1.0s
     val night = now.hour >= 21 || now.hour <= 6
     return ToneSpec2(
@@ -52,7 +50,7 @@ fun autoSpec2(now: LocalDateTime, rng: Random = Random(System.nanoTime())): Tone
 
 // 2オペFM＋ワンポールLPF、2〜3音を50ms間隔で順次重ねる
 fun synthEMoneyLike(sampleRate: Int = 44100, targetDb: Double = -1.0): ShortArray {
-    val rng = Random(System.nanoTime())
+    val rng = Random.Default
     val spec = autoSpec2(LocalDateTime.now(), rng)
     val notes = pickConstrainedNotes(rng)
     val n = spec.durationMs * sampleRate / 1000
