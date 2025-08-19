@@ -56,6 +56,9 @@ private fun toWavBytes(pcm: ShortArray, sampleRate: Int): ByteArray {
 }
 
 fun createChannelWithSound(context: Context, channelId: String, name: String, soundUri: Uri) {
+    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    manager.deleteNotificationChannel(channelId)
+
     val attrs = AudioAttributes.Builder()
         .setUsage(AudioAttributes.USAGE_NOTIFICATION)
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -64,8 +67,7 @@ fun createChannelWithSound(context: Context, channelId: String, name: String, so
         setSound(soundUri, attrs)
         enableVibration(true)
     }
-    (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-        .createNotificationChannel(ch)
+    manager.createNotificationChannel(ch)
 }
 
 fun postTestNotification(context: Context, channelId: String) {
